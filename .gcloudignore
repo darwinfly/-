@@ -1,0 +1,8 @@
+.gcloudignore
+.git
+.gitignore
+venv/
+__pycache__/
+*.pyc
+.antigravity-ide/
+.gemini/

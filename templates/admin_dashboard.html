@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統後台管理中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Quill.js Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+        }
+        .dashboard-glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* ── Quill dark theme overrides ── */
+        .ql-toolbar.ql-snow {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px 12px 0 0;
+        }
+        .ql-container.ql-snow {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            color: #f1f5f9;
+            font-size: 14px;
+            min-height: 120px;
+        }
+        .ql-editor {
+            min-height: 120px;
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            color: #f1f5f9;
+        }
+        .ql-editor.ql-blank::before {
+            color: #475569;
+            font-style: normal;
+        }
+        .ql-snow .ql-stroke { stroke: #94a3b8; }
+        .ql-snow .ql-fill  { fill: #94a3b8; }
+        .ql-snow .ql-picker  { color: #94a3b8; }
+        .ql-snow .ql-picker-options {
+            background: #1e293b;
+            border-color: #334155;
+            border-radius: 8px;
+        }
+        .ql-snow .ql-picker-item { color: #cbd5e1; }
+        .ql-snow .ql-picker-item:hover,
+        .ql-toolbar.ql-snow button:hover .ql-stroke {
+            stroke: #818cf8;
+        }
+        .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+        .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-stroke { stroke: #818cf8; }
+        .ql-toolbar.ql-snow button.ql-active .ql-fill  { fill: #818cf8; }
+        /* Color picker dropdown fix on dark bg */
+        .ql-snow .ql-color-picker .ql-picker-options { padding: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <!-- Admin Top Nav -->
+    <header class="border-b border-slate-800 bg-slate-900/60 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <span class="text-lg font-bold tracking-wider text-white">管理後台</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/admin/logout" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition duration-200">
+                    登出系統
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tabs Nav -->
+        <div class="flex border-b border-slate-800 mb-8 space-x-8">
+            <button id="tab-btn-customers" onclick="switchTab('customers')" 
+                    class="py-4 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 focus:outline-none transition duration-200">
+                客戶名單 ({{ customers|length }})
+            </button>
+            <button id="tab-btn-products" onclick="switchTab('products')" 
+                    class="py-4 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition duration-200">
+                商品管理 ({{ products|length }})
+            </button>
+            <button id="tab-btn-profile" onclick="switchTab('profile')" 
+                    class="py-4 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 focus:outline-none transition duration-200">
+                品牌設定
+            </button>
+        </div>
+
+        <!-- TAB: Customers -->
+        <div id="tab-content-customers" class="block">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">客戶資料名單</h2>
+                <button id="sync-btn" onclick="syncCustomers()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40 text-xs font-semibold rounded-full transition-all duration-200 cursor-pointer select-none">
+                    <svg id="sync-icon" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span id="sync-text">即時同步</span>
+                </button>
+            </div>
+
+            {% if customers %}
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/40">
+                <table class="min-w-full divide-y divide-slate-800 text-left text-sm">
+                    <thead class="bg-slate-900/80">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-semibold text-slate-300">姓名</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-slate-300">手機號碼</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-slate-300">LINE ID</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-slate-300">登記時間</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-slate-300">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        {% for customer in customers %}
+                        <tr class="hover:bg-slate-800/20 transition duration-150">
+                            <td class="px-6 py-4 font-medium text-white">{{ customer.name }}</td>
+                            <td class="px-6 py-4 text-slate-300">{{ customer.phone }}</td>
+                            <td class="px-6 py-4 text-slate-300">
+                                <span class="bg-slate-800 px-2.5 py-1 rounded text-xs border border-slate-700/50 text-indigo-300">
+                                    {{ customer.line_id }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-400 text-xs">{{ customer.formatted_time }}</td>
+                            <td class="px-6 py-4">
+                                <form action="/admin/customers/delete/{{ customer.id }}" method="POST"
+                                      onsubmit="return confirm('確定要永久刪除「{{ customer.name }}」的客戶個資嗎？此操作無法復原！');">
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 text-xs font-semibold border border-red-900/40 hover:border-red-700/60 transition duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        刪除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="dashboard-glass rounded-3xl p-12 text-center max-w-md mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <h3 class="text-lg font-semibold text-white mb-2">尚無客戶資料</h3>
+                <p class="text-slate-400 text-sm">目前還沒有客戶填寫表單登入。</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- TAB: Products -->
+        <div id="tab-content-products" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">商品管理型錄</h2>
+                <button onclick="openAddModal()" 
+                        class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl flex items-center space-x-2 shadow-lg shadow-indigo-600/20 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span>新增商品</span>
+                </button>
+            </div>
+
+            {% if products %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for product in products %}
+                <div class="dashboard-glass rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-800">
+                    <div class="relative pt-[60%] bg-slate-900">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.title }}" class="absolute inset-0 w-full h-full object-cover">
+                        {% else %}
+                        <div class="absolute inset-0 flex items-center justify-center text-slate-600">無圖片</div>
+                        {% endif %}
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-2">{{ product.title }}</h3>
+                            {% if product.price or product.spec %}
+                            <div class="flex items-center gap-2 mb-2">
+                                {% if product.price %}<span class="text-rose-400 font-bold text-sm">{{ product.price }}</span>{% endif %}
+                                {% if product.spec %}<span class="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{{ product.spec }}</span>{% endif %}
+                            </div>
+                            {% endif %}
+                            <p class="text-slate-400 text-xs line-clamp-2 mb-4 leading-relaxed">{{ product.description }}</p>
+                            <a href="{{ product.url }}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-xs underline block truncate mb-4">
+                                {{ product.url }}
+                            </a>
+                        </div>
+                        <div class="flex space-x-3 mt-4">
+                            <button onclick='openEditModal({{ product|tojson }})'
+                                    class="flex-1 py-2 text-center text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition duration-200 border border-slate-700/50">
+                                編輯
+                            </button>
+                            <form action="/admin/products/delete/{{ product.id }}" method="POST" class="flex-1" onsubmit="return confirm('確定要刪除此商品嗎？');">
+                                <button type="submit" 
+                                        class="w-full py-2 text-center text-xs font-semibold bg-red-950/40 hover:bg-red-900/40 text-red-400 rounded-lg transition duration-200 border border-red-900/30">
+                                    刪除
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="dashboard-glass rounded-3xl p-12 text-center max-w-md mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <h3 class="text-lg font-semibold text-white mb-2">尚無商品資料</h3>
+                <p class="text-slate-400 text-sm">請點擊上方「新增商品」按鈕上架商品。</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- TAB: Brand Profile Settings -->
+        <div id="tab-content-profile" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">品牌基本資料設定</h2>
+                <button type="button" onclick="saveProfileForm()"
+                        id="gcp-sync-btn"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/50 text-xs font-semibold rounded-full transition-all duration-200 cursor-pointer">
+                    <svg id="gcp-sync-icon" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span id="gcp-sync-text">GCP Firestore 同步</span>
+                </button>
+            </div>
+
+            <div class="max-w-2xl dashboard-glass rounded-3xl p-8 border border-slate-800">
+                <form action="/admin/profile/save" method="POST" class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">品牌名稱</label>
+                        <input type="text" name="shop_name" required value="{{ shop_profile.shop_name }}" placeholder="例如：我的質感選物店" 
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">品牌簡介
+                            <span class="text-slate-600 normal-case ml-1">(支援富文本美編)</span>
+                        </label>
+                        <!-- Hidden input carries the HTML content to the backend -->
+                        <input type="hidden" id="shop_description_html" name="shop_description">
+                        <!-- Quill editor mount point -->
+                        <div id="quill-description" class="rounded-xl"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Logo 圖片網址</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="profile-logo_url" name="shop_logo_url" value="{{ shop_profile.shop_logo_url }}" placeholder="https://example.com/logo.jpg 或上傳本地圖片" 
+                                   class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                            <input type="file" id="profile-logo-file" accept="image/*" class="hidden">
+                            <button type="button" onclick="document.getElementById('profile-logo-file').click()" 
+                                    class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl border border-slate-700 transition duration-200">
+                                上傳圖片
+                            </button>
+                        </div>
+                        <span id="profile-logo-upload-status" class="text-xs text-slate-500 mt-1 block"></span>
+                        <div class="mt-4 flex items-center space-x-4">
+                            <span class="text-xs text-slate-400">目前預覽：</span>
+                            <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center">
+                                <img id="profile-logo-preview" src="{{ shop_profile.shop_logo_url or '' }}" alt="Logo 預覽" class="w-full h-full object-cover {% if not shop_profile.shop_logo_url %}hidden{% endif %}">
+                                <svg id="profile-logo-placeholder" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-600 {% if shop_profile.shop_logo_url %}hidden{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-800/60 flex items-center gap-3">
+                        <button type="button" onclick="saveProfileForm()"
+                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition duration-200 shadow-lg shadow-indigo-600/10">
+                            儲存設定
+                        </button>
+                        <span id="profile-save-status" class="text-xs text-emerald-400 hidden">✔️ 已成功同步至 Firestore！</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-xs text-slate-500 border-t border-slate-900 mt-12">
+        <p>系統管理中心 v1.4.0 | &copy; 2026 Jinyen Select. All rights reserved.</p>
+    </footer>
+
+    <!-- MODAL: Add Product -->
+    <div id="add-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="bg-slate-900 border border-slate-850 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white text-lg">新增商品上架</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form action="/admin/products/add" method="POST" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品標題</label>
+                    <input type="text" name="title" required placeholder="請輸入商品標題" 
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品描述</label>
+                    <textarea name="description" rows="3" required placeholder="請輸入商品詳細規格或介紹" 
+                              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">售價 <span class="text-slate-600 normal-case">(選填)</span></label>
+                        <input type="text" name="price" placeholder="例如：NT$299" 
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">規格 <span class="text-slate-600 normal-case">(選填)</span></label>
+                        <input type="text" name="spec" placeholder="例如：50ml/瓶" 
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品圖片連結 (URL)</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="add-image_url" name="image_url" placeholder="https://example.com/image.jpg 或上傳本地圖片" 
+                               class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <input type="file" id="add-image-file" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('add-image-file').click()" 
+                                class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl border border-slate-700 transition duration-200">
+                            上傳圖片
+                        </button>
+                    </div>
+                    <span id="add-upload-status" class="text-xs text-slate-500 mt-1 block"></span>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">賣貨便商品網址</label>
+                    <input type="url" name="url" required placeholder="https://myship.7-11.com.tw/general/detail/..." 
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div class="flex space-x-3 pt-4 border-t border-slate-800/60">
+                    <button type="button" onclick="closeAddModal()" 
+                            class="flex-1 py-2.5 text-center text-sm font-semibold bg-slate-850 hover:bg-slate-800 text-slate-400 rounded-xl transition duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 py-2.5 text-center text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition duration-200 shadow-lg shadow-indigo-600/10">
+                        確認上架
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Edit Product -->
+    <div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="bg-slate-900 border border-slate-850 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white text-lg">編輯商品</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="edit-form" method="POST" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品標題</label>
+                    <input type="text" id="edit-title" name="title" required placeholder="請輸入商品標題" 
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品描述</label>
+                    <textarea id="edit-description" name="description" rows="3" required placeholder="請輸入商品詳細規格或介紹" 
+                              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">售價 <span class="text-slate-600 normal-case">(選填)</span></label>
+                        <input type="text" id="edit-price" name="price" placeholder="例如：NT$299" 
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">規格 <span class="text-slate-600 normal-case">(選填)</span></label>
+                        <input type="text" id="edit-spec" name="spec" placeholder="例如：50ml/瓶" 
+                               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">商品圖片連結 (URL)</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="edit-image_url" name="image_url" placeholder="https://example.com/image.jpg 或上傳本地圖片" 
+                               class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <input type="file" id="edit-image-file" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('edit-image-file').click()" 
+                                class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl border border-slate-700 transition duration-200">
+                            上傳圖片
+                        </button>
+                    </div>
+                    <span id="edit-upload-status" class="text-xs text-slate-500 mt-1 block"></span>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">賣貨便商品網址</label>
+                    <input type="url" id="edit-url" name="url" required placeholder="https://myship.7-11.com.tw/general/detail/..." 
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div class="flex space-x-3 pt-4 border-t border-slate-800/60">
+                    <button type="button" onclick="closeEditModal()" 
+                            class="flex-1 py-2.5 text-center text-sm font-semibold bg-slate-850 hover:bg-slate-800 text-slate-400 rounded-xl transition duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 py-2.5 text-center text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition duration-200 shadow-lg shadow-indigo-600/10">
+                        儲存變更
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        function switchTab(tab) {
+            const tabs = ['customers', 'products', 'profile'];
+            tabs.forEach(t => {
+                const btn = document.getElementById('tab-btn-' + t);
+                const content = document.getElementById('tab-content-' + t);
+                if (t === tab) {
+                    btn.classList.add('border-indigo-500', 'text-indigo-400');
+                    btn.classList.remove('border-transparent', 'text-slate-400');
+                    content.classList.remove('hidden');
+                    content.classList.add('block');
+                } else {
+                    btn.classList.remove('border-indigo-500', 'text-indigo-400');
+                    btn.classList.add('border-transparent', 'text-slate-400');
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        // Sync customers
+        function syncCustomers() {
+            const btn = document.getElementById('sync-btn');
+            const icon = document.getElementById('sync-icon');
+            const text = document.getElementById('sync-text');
+            if (!btn) return;
+
+            // Animate: spin icon + disable button
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-wait');
+            icon.classList.add('animate-spin');
+            text.textContent = '同步中...';
+
+            // Reload page to re-fetch latest Firestore data
+            setTimeout(() => { window.location.reload(); }, 400);
+        }
+
+        // Add Modal
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+            document.getElementById('add-upload-status').textContent = '';
+            document.getElementById('add-image-file').value = '';
+        }
+
+        // Edit Modal
+        function openEditModal(product) {
+            document.getElementById('edit-form').action = "/admin/products/edit/" + product.id;
+            document.getElementById('edit-title').value = product.title;
+            document.getElementById('edit-description').value = product.description;
+            document.getElementById('edit-image_url').value = product.image_url || '';
+            document.getElementById('edit-url').value = product.url;
+            document.getElementById('edit-price').value = product.price || '';
+            document.getElementById('edit-spec').value = product.spec || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            document.getElementById('edit-upload-status').textContent = '';
+            document.getElementById('edit-image-file').value = '';
+        }
+
+        // Setup image upload handlers
+        function setupImageUpload(fileInputId, textInputId, statusId, previewId, placeholderId) {
+            const fileInput = document.getElementById(fileInputId);
+            const textInput = document.getElementById(textInputId);
+            const status = document.getElementById(statusId);
+            const preview = previewId ? document.getElementById(previewId) : null;
+            const placeholder = placeholderId ? document.getElementById(placeholderId) : null;
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                status.textContent = '讀取中...';
+                status.className = "text-xs text-indigo-400 mt-1 block animate-pulse";
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Compress using canvas to ensure it fits Firestore document limits
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 800; // Resize to max 800px width/height
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to compressed jpeg data URL (0.7 quality)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        textInput.value = dataUrl;
+                        status.textContent = '轉換成功！(已自動優化大小)';
+                        status.className = "text-xs text-green-400 mt-1 block";
+
+                        if (preview && placeholder) {
+                            preview.src = dataUrl;
+                            preview.classList.remove('hidden');
+                            placeholder.classList.add('hidden');
+                        }
+                    };
+                    img.onerror = function() {
+                        status.textContent = '圖片載入錯誤！';
+                        status.className = "text-xs text-red-400 mt-1 block";
+                    };
+                    img.src = event.target.result;
+                };
+                reader.onerror = function() {
+                    status.textContent = '讀取檔案錯誤！';
+                    status.className = "text-xs text-red-400 mt-1 block";
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Initialize upload handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            setupImageUpload('add-image-file', 'add-image_url', 'add-upload-status');
+            setupImageUpload('edit-image-file', 'edit-image_url', 'edit-upload-status');
+            setupImageUpload('profile-logo-file', 'profile-logo_url', 'profile-logo-upload-status', 'profile-logo-preview', 'profile-logo-placeholder');
+
+            // Setup profile logo url preview input listener
+            const logoUrlInput = document.getElementById('profile-logo_url');
+            if (logoUrlInput) {
+                logoUrlInput.addEventListener('input', function(e) {
+                    const preview = document.getElementById('profile-logo-preview');
+                    const placeholder = document.getElementById('profile-logo-placeholder');
+                    const val = e.target.value.trim();
+                    if (val) {
+                        preview.src = val;
+                        preview.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                    } else {
+                        preview.classList.add('hidden');
+                        placeholder.classList.remove('hidden');
+                    }
+                });
+            }
+            // \u2500\u2500 Quill Rich Text Editor: shop_description \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            const quillDescription = new Quill('#quill-description', {
+                theme: 'snow',
+                placeholder: '\u8f38\u5165\u54c1\u724c\u7c21\u4ecb\uff0c\u652f\u63f4\u52a0\u7c97\u3001\u659c\u9ad4\u3001\u5f69\u8272\u6587\u5b57\u7b49\u5bcc\u6587\u672c\u6838\u5fc3...',
+                modules: {
+                    toolbar: [
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Pre-populate Quill with saved HTML from Firestore
+            const savedDescription = {{ shop_profile.shop_description | tojson }};
+            if (savedDescription) {
+                quillDescription.clipboard.dangerouslyPasteHTML(savedDescription);
+            }
+
+            // On form submit: copy Quill HTML into hidden input
+            // Using a global function so both buttons (top badge + bottom save) can call it
+            window.saveProfileForm = function() {
+                // 1. Capture Quill HTML → hidden input
+                const html = quillDescription.root.innerHTML;
+                document.getElementById('shop_description_html').value = html;
+
+                // 2. Animate the GCP sync button
+                const syncBtn  = document.getElementById('gcp-sync-btn');
+                const syncIcon = document.getElementById('gcp-sync-icon');
+                const syncText = document.getElementById('gcp-sync-text');
+                if (syncBtn) {
+                    syncBtn.disabled = true;
+                    syncBtn.classList.add('opacity-60');
+                    if (syncIcon) syncIcon.classList.add('animate-spin');
+                    if (syncText) syncText.textContent = '同步中...';
+                }
+
+                // 3. Submit the form
+                const profileForm = document.querySelector('form[action="/admin/profile/save"]');
+                if (profileForm) profileForm.submit();
+            };
+        });
+    </script>
+</body>
+</html>

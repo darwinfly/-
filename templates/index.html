@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP 限時嚴選 | 品味生活</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans TC', sans-serif; background-color: #f9fafb; }
+        ::-webkit-scrollbar { display: none; }
+
+        /* ── Form gate modal animations ── */
+        #form-modal { transition: opacity 0.22s ease; }
+        #form-modal.modal-hidden   { opacity: 0; pointer-events: none; }
+        #form-modal.modal-visible  { opacity: 1; pointer-events: auto; }
+        #form-modal-card {
+            transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.22s ease;
+        }
+        #form-modal.modal-hidden #form-modal-card  { transform: scale(0.92) translateY(20px); opacity: 0; }
+        #form-modal.modal-visible #form-modal-card { transform: scale(1)    translateY(0);    opacity: 1; }
+
+        /* ── Product detail modal animations ── */
+        #product-detail-modal { transition: opacity 0.22s ease; }
+        #product-detail-modal.modal-hidden   { opacity: 0; pointer-events: none; }
+        #product-detail-modal.modal-visible  { opacity: 1; pointer-events: auto; }
+        #product-detail-modal-card {
+            transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.22s ease;
+        }
+        #product-detail-modal.modal-hidden #product-detail-modal-card  { transform: translateY(28px) scale(0.96); opacity: 0; }
+        #product-detail-modal.modal-visible #product-detail-modal-card { transform: translateY(0)    scale(1);    opacity: 1; }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen">
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- MAIN CONTAINER (Mobile-First, max-w-md 450px)  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-gray-100/80 flex flex-col justify-between pb-12">
+
+        <div>
+            <!-- Top Announcement Label -->
+            <div class="w-full pt-6 px-4 text-center">
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider bg-rose-50 text-rose-600 border border-rose-100 shadow-sm animate-pulse">
+                    ✨ 點擊商品解鎖今日限定優惠連結
+                </span>
+            </div>
+
+            <!-- Profile Header -->
+            <header class="text-center pt-8 pb-6 px-6">
+                <div class="relative inline-block mb-3.5">
+                    <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+                        {% if shop_profile.shop_logo_url %}
+                        <img src="{{ shop_profile.shop_logo_url }}" alt="{{ shop_profile.shop_name }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-gray-900">{{ shop_profile.shop_name }}</h1>
+                <p class="text-[11px] text-gray-400 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                    {{ shop_profile.shop_description | safe }}
+                </p>
+                <!-- Social Icons -->
+                <div class="flex justify-center space-x-3.5 mt-4">
+                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+                       class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-900 hover:shadow-sm transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+                        </svg>
+                    </a>
+                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+                       class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-900 hover:shadow-sm transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
+                        </svg>
+                    </a>
+                    <a href="https://line.me" target="_blank" rel="noopener noreferrer"
+                       class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-900 hover:shadow-sm transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                    </a>
+                </div>
+            </header>
+        </div>
+
+        <!-- ══════════════════════ -->
+        <!-- PRODUCT GRID (always visible, click-gated) -->
+        <!-- ══════════════════════ -->
+        <main class="px-4 flex-1">
+            {% if products %}
+            <div id="product-grid" class="grid grid-cols-2 gap-4">
+                {% for product in products %}
+                <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group"
+                     onclick='checkAndOpenProduct({{ product|tojson }})'>
+                    <div class="relative aspect-square w-full bg-gray-50 overflow-hidden border-b border-gray-50">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.title }}"
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                             onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800';">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <!-- Hover hint -->
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/8 transition-colors duration-300 flex items-center justify-center">
+                            <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-[10px] font-semibold bg-black/50 px-2 py-1 rounded-full">查看詳情</span>
+                        </div>
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-800 line-clamp-1 leading-snug">{{ product.title }}</h3>
+                            {% if product.price %}
+                            <p class="text-[11px] font-bold text-rose-500 mt-1">{{ product.price }}</p>
+                            {% endif %}
+                            {% if product.spec %}
+                            <span class="inline-block mt-1 text-[9px] text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-full">{{ product.spec }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="mt-3">
+                            <span class="block w-full text-center py-2 rounded-full text-[10px] font-bold uppercase tracking-wider text-white bg-gray-900 group-hover:bg-gray-700 transition-all duration-300 shadow-sm">
+                                查看商品
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-white border border-gray-100 rounded-2xl p-10 text-center shadow-sm max-w-[280px] mx-auto mt-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-300 mx-auto mb-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <h3 class="text-xs font-bold text-gray-800 mb-1">嚴選商品備置中</h3>
+                <p class="text-[10px] text-gray-400">專屬今日精選商品正陸續上架，請稍候。</p>
+            </div>
+            {% endif %}
+        </main>
+
+        <footer class="text-center text-[10px] text-gray-300 mt-16 px-4">
+            <p>© 2026 {{ shop_profile.shop_name }}. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- MODAL 1: FORM GATE (shown on first card click, z-50)      -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="form-modal"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md modal-hidden"
+         onclick="handleFormBackdropClick(event)">
+
+        <div id="form-modal-card"
+             class="bg-white/95 backdrop-blur-md rounded-[2rem] p-7 max-w-xs w-full shadow-2xl border border-gray-100 relative overflow-hidden">
+            <!-- Rose gold top accent -->
+            <div class="h-1 w-full bg-gradient-to-r from-rose-200 via-rose-300 to-rose-200 absolute top-0 left-0"></div>
+
+            <!-- Header -->
+            <div class="text-center mb-5 pt-2">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-50 mb-3 text-rose-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900">✨ 解鎖限定優惠商品</h3>
+                <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">填寫快速會員資料，即可查看今日限定優惠商品詳情與購買連結</p>
+            </div>
+
+            <form id="unlock-form" class="space-y-3.5" onsubmit="handleFormSubmit(event)">
+                <!-- Name -->
+                <div>
+                    <label for="f-name" class="block text-[10px] font-semibold text-gray-400 mb-1">真實姓名</label>
+                    <input type="text" id="f-name" name="name" required placeholder="例如：王小明"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 placeholder-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200">
+                </div>
+                <!-- Phone -->
+                <div>
+                    <label for="f-phone" class="block text-[10px] font-semibold text-gray-400 mb-1">手機號碼</label>
+                    <input type="tel" id="f-phone" name="phone" required placeholder="例如：0912345678" pattern="^09\d{8}$"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 placeholder-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200">
+                    <span class="text-[9px] text-gray-400 mt-1 block">請輸入 10 碼手機號碼 (09xxxxxxxx)</span>
+                </div>
+                <!-- LINE ID -->
+                <div>
+                    <label for="f-line_id" class="block text-[10px] font-semibold text-gray-400 mb-1">LINE ID</label>
+                    <input type="text" id="f-line_id" name="line_id" required placeholder="例如：xiaoming123"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 placeholder-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-transparent transition duration-200">
+                </div>
+                <!-- Privacy Checkbox -->
+                <div class="flex items-start gap-2 pt-1">
+                    <input type="checkbox" id="f-privacy" name="privacy" required
+                           class="mt-0.5 w-3.5 h-3.5 rounded border-gray-300 accent-gray-900 cursor-pointer flex-shrink-0">
+                    <label for="f-privacy" class="text-[9px] text-gray-400 leading-relaxed cursor-pointer">
+                        我已閱讀並同意
+                        <span class="text-gray-700 font-semibold underline underline-offset-2">隱私權政策</span>，
+                        同意提供個人資料供金妍選物用於會員服務與商品推廣通知。
+                    </label>
+                </div>
+                <!-- Error message (hidden by default) -->
+                <p id="form-error" class="text-[10px] text-red-500 hidden text-center"></p>
+                <!-- Submit -->
+                <div class="pt-2">
+                    <button type="submit" id="form-submit-btn"
+                            class="w-full py-3 rounded-full bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs tracking-wider transition-all duration-300 transform active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                        <span id="form-btn-text">送出資料，即刻解鎖 🔓</span>
+                        <svg id="form-spinner" class="hidden animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- MODAL 2: PRODUCT DETAIL (shown after unlock/already done) -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="product-detail-modal"
+         class="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm modal-hidden"
+         onclick="handleProductBackdropClick(event)">
+
+        <div id="product-detail-modal-card"
+             class="bg-white w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
+
+            <!-- Close button -->
+            <button onclick="closeProductModal()"
+                    class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-gray-600 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- Image (4:3 ratio saves vertical space) -->
+            <div class="relative w-full flex-shrink-0 overflow-hidden bg-gray-100" style="aspect-ratio:4/3">
+                <img id="modal-product-image" src="" alt=""
+                     class="w-full h-full object-cover"
+                     onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800';">
+                <div class="absolute top-4 left-4">
+                    <span id="modal-product-spec-badge"
+                          class="inline-block text-[9px] font-semibold text-rose-600 bg-rose-50/90 backdrop-blur-sm border border-rose-100 px-2 py-0.5 rounded-full shadow-sm hidden">
+                    </span>
+                </div>
+            </div>
+
+            <!-- Scrollable content (title, price, spec, description) -->
+            <div class="overflow-y-auto flex-1 p-5 flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-3">
+                    <h2 id="modal-product-title" class="text-base font-bold text-gray-900 leading-snug flex-1"></h2>
+                    <p id="modal-product-price" class="text-lg font-extrabold text-rose-500 flex-shrink-0 hidden"></p>
+                </div>
+                <div class="h-px bg-gradient-to-r from-rose-100 via-gray-100 to-transparent"></div>
+                <div id="modal-product-spec-row" class="flex items-center gap-2 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-[11px] font-medium text-gray-500">規格：</span>
+                    <span id="modal-product-spec" class="text-[11px] text-gray-700 font-semibold"></span>
+                </div>
+                <p id="modal-product-description" class="text-xs text-gray-500 leading-relaxed"></p>
+            </div>
+
+            <!-- Sticky CTA footer (always visible, outside scroll area) -->
+            <div class="flex-shrink-0 px-5 py-4 bg-white border-t border-gray-50">
+                <a id="modal-product-cta" href="#" target="_blank" rel="noopener noreferrer"
+                   class="block w-full text-center py-3.5 rounded-full text-sm font-bold tracking-wide text-white bg-gray-900 hover:bg-gray-800 active:scale-[0.97] transition-all duration-300 shadow-lg shadow-gray-900/20">
+                    🛒 前往賣貨便購買
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════ -->
+    <!-- JAVASCRIPT ENGINE  -->
+    <!-- ══════════════════ -->
+    <script>
+        const STORAGE_KEY = 'jinyen_submitted';
+        const PHONE_KEY   = 'jinyen_phone';        // stored after form submit
+        let pendingProduct = null; // holds product while user fills form
+
+        // ── Server-side session validation ────────────────────────
+        // Called on page load: if localStorage says submitted, we verify the
+        // phone number still exists in Firestore. If admin deleted the record
+        // the flag is cleared so the form gate re-appears.
+        async function validateStoredSession() {
+            if (localStorage.getItem(STORAGE_KEY) !== 'true') return;
+            const phone = localStorage.getItem(PHONE_KEY);
+            if (!phone) {
+                // No phone stored = old session without phone key, clear to force re-fill
+                localStorage.removeItem(STORAGE_KEY);
+                return;
+            }
+            try {
+                const resp = await fetch('/api/check-status?phone=' + encodeURIComponent(phone));
+                const data = await resp.json();
+                if (!data.valid) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(PHONE_KEY);
+                    // No reload needed: page was already rendered locked by server
+                }
+            } catch (e) {
+                // Network error: don't penalise the user, keep unlocked
+            }
+        }
+
+        // ── Utility: show/hide modals with animation ──────────────
+        function showModal(el) {
+            el.classList.remove('modal-hidden');
+            el.offsetHeight; // reflow
+            el.classList.add('modal-visible');
+            document.body.style.overflow = 'hidden';
+        }
+        function hideModal(el, callback) {
+            el.classList.remove('modal-visible');
+            el.classList.add('modal-hidden');
+            setTimeout(() => {
+                if (callback) callback();
+            }, 280);
+        }
+
+        // ── Main entry point: card click ──────────────────────────
+        function checkAndOpenProduct(product) {
+            if (localStorage.getItem(STORAGE_KEY) === 'true') {
+                // Already submitted → open product detail directly
+                openProductModal(product);
+            } else {
+                // First time → store product, show form gate
+                pendingProduct = product;
+                openFormModal();
+            }
+        }
+
+        // ── Form gate modal ───────────────────────────────────────
+        function openFormModal() {
+            resetForm();
+            showModal(document.getElementById('form-modal'));
+        }
+        function closeFormModal(callback) {
+            hideModal(document.getElementById('form-modal'), () => {
+                if (callback) callback();
+                // Only reset overflow if product modal isn't about to open
+            });
+        }
+        function handleFormBackdropClick(event) {
+            if (event.target === document.getElementById('form-modal')) {
+                closeFormModal(() => { document.body.style.overflow = ''; });
+            }
+        }
+        function resetForm() {
+            document.getElementById('unlock-form').reset();
+            document.getElementById('form-error').classList.add('hidden');
+            setFormLoading(false);
+        }
+        function setFormLoading(loading) {
+            const btn = document.getElementById('form-submit-btn');
+            const txt = document.getElementById('form-btn-text');
+            const spin = document.getElementById('form-spinner');
+            btn.disabled = loading;
+            txt.textContent = loading ? '送出中...' : '送出資料，即刻解鎖 🔓';
+            spin.classList.toggle('hidden', !loading);
+        }
+
+        // ── Form submit (AJAX fetch to /api/submit) ───────────────
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            setFormLoading(true);
+            document.getElementById('form-error').classList.add('hidden');
+
+            const formData = new FormData(document.getElementById('unlock-form'));
+
+            try {
+                const resp = await fetch('/api/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+
+                if (resp.ok && data.ok) {
+                    // Mark as submitted in localStorage (including phone for future validation)
+                    localStorage.setItem(STORAGE_KEY, 'true');
+                    const phoneVal = formData.get('phone') || '';
+                    if (phoneVal) localStorage.setItem(PHONE_KEY, phoneVal);
+
+                    // Close form → open product modal
+                    closeFormModal(() => {
+                        if (pendingProduct) {
+                            openProductModal(pendingProduct);
+                            pendingProduct = null;
+                        } else {
+                            document.body.style.overflow = '';
+                        }
+                    });
+                } else {
+                    throw new Error(data.error || '送出失敗');
+                }
+            } catch (err) {
+                setFormLoading(false);
+                const errEl = document.getElementById('form-error');
+                errEl.textContent = '送出失敗，請稍後再試。';
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        // ── Product detail modal ──────────────────────────────────
+        function openProductModal(product) {
+            document.getElementById('modal-product-image').src = product.image_url || '';
+            document.getElementById('modal-product-image').alt = product.title || '';
+            document.getElementById('modal-product-title').textContent = product.title || '';
+            document.getElementById('modal-product-description').textContent = product.description || '';
+
+            const priceEl = document.getElementById('modal-product-price');
+            if (product.price) { priceEl.textContent = product.price; priceEl.classList.remove('hidden'); }
+            else { priceEl.classList.add('hidden'); }
+
+            const specEl = document.getElementById('modal-product-spec');
+            const specRowEl = document.getElementById('modal-product-spec-row');
+            const specBadgeEl = document.getElementById('modal-product-spec-badge');
+            if (product.spec) {
+                specEl.textContent = product.spec;
+                specRowEl.classList.remove('hidden');
+                specBadgeEl.textContent = product.spec;
+                specBadgeEl.classList.remove('hidden');
+            } else {
+                specRowEl.classList.add('hidden');
+                specBadgeEl.classList.add('hidden');
+            }
+
+            document.getElementById('modal-product-cta').href = product.url || '#';
+            showModal(document.getElementById('product-detail-modal'));
+        }
+        function closeProductModal() {
+            hideModal(document.getElementById('product-detail-modal'), () => {
+                document.body.style.overflow = '';
+            });
+        }
+        function handleProductBackdropClick(event) {
+            if (event.target === document.getElementById('product-detail-modal')) closeProductModal();
+        }
+
+        // ── Escape key closes whichever modal is open ─────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const formModal = document.getElementById('form-modal');
+            const prodModal = document.getElementById('product-detail-modal');
+            if (formModal.classList.contains('modal-visible')) {
+                closeFormModal(() => { document.body.style.overflow = ''; });
+            } else if (prodModal.classList.contains('modal-visible')) {
+                closeProductModal();
+            }
+        });
+
+        // ── On page load: validate server-side if already unlocked ─
+        document.addEventListener('DOMContentLoaded', () => {
+            validateStoredSession();
+        });
+    </script>
+</body>
+</html>
