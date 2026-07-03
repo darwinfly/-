@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.4.1] - 2026-07-03
+- 根據客戶反饋調整前台 UI：移除頂部通知標籤、顯著放大品牌圓形 Logo 尺寸以強化品牌感。
+
 ## [v1.4.0] - 2026-07-02
 - 引入 Quill.js 富文本編輯器，支援通知欄與品牌簡介的自訂字型、色彩美編與外部格式貼上功能。
 - 後台品牌簡介改為帶有工具列的富文本 WYSIWYG 編輯器，儲存時以 HTML 字串存入 Firestore。

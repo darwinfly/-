@@ -1,7 +1,6 @@
-# VERSION: v1.4.0 (Quill.js Rich Text Editor for Brand Bio)
-# DATE: 2026-07-02
-# CHANGES: Replaced plain textarea in admin brand settings with Quill.js rich text editor.
-#          shop_description is now stored/rendered as HTML; frontend uses |safe filter.
+# VERSION: v1.4.1 (Clean Frontpage Header)
+# DATE: 2026-07-03
+# CHANGES: Removed frontpage announcement label, enlarged shop avatar, and updated layout margins.
 import os
 import datetime
 from typing import Optional

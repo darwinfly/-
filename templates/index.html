@@ -39,21 +39,14 @@
     <div class="max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-gray-100/80 flex flex-col justify-between pb-12">
 
         <div>
-            <!-- Top Announcement Label -->
-            <div class="w-full pt-6 px-4 text-center">
-                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider bg-rose-50 text-rose-600 border border-rose-100 shadow-sm animate-pulse">
-                    ✨ 點擊商品解鎖今日限定優惠連結
-                </span>
-            </div>
-
             <!-- Profile Header -->
-            <header class="text-center pt-8 pb-6 px-6">
+            <header class="text-center pt-10 pb-6 px-6">
                 <div class="relative inline-block mb-3.5">
-                    <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+                    <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-white shadow-md mx-auto bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
                         {% if shop_profile.shop_logo_url %}
                         <img src="{{ shop_profile.shop_logo_url }}" alt="{{ shop_profile.shop_name }}" class="w-full h-full object-cover">
                         {% else %}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         {% endif %}
