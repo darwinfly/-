@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}管理者後台 | 產品簡介說明{% endblock %}
+{% block meta_description %}TechShowcase 管理後台。提供管理者新增、更新、刪除產品，以及上傳 PDF 簡報文件。{% endblock %}
+
+{% block content %}
+<!-- 後台 Header -->
+<div class="admin-header" id="admin-page-header">
+    <h1><i class="fa-solid fa-gauge" style="color: var(--accent-primary); margin-right: 12px;"></i>後台管理系統</h1>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger" id="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i> 安全登出
+    </a>
+</div>
+
+<!-- 後台 Grid 主體 -->
+<div class="admin-grid" id="admin-main-grid">
+    
+    <!-- 左側選單：新增產品 + 既有產品清單 -->
+    <div class="admin-menu-list" id="admin-products-menu">
+        <h2 style="font-size: 18px; margin-bottom: 8px; color: var(--text-secondary);">產品管理</h2>
+
+        <!-- 新增產品按鈕 -->
+        <div class="admin-menu-item" data-target="panel-new-product" id="menu-item-new-product"
+             style="border: 2px dashed var(--accent-primary); opacity: 0.85;">
+            <div class="admin-menu-info">
+                <h3 style="color: var(--accent-primary);">
+                    <i class="fa-solid fa-plus" style="margin-right: 6px;"></i>新增產品
+                </h3>
+                <span>建立一個全新的產品頁面</span>
+            </div>
+            <i class="fa-solid fa-chevron-right admin-menu-chevron"></i>
+        </div>
+
+        {% for product in products %}
+        <div class="admin-menu-item {% if loop.first %}active{% endif %}" data-target="panel-{{ product.id }}" id="menu-item-{{ product.id }}">
+            <div class="admin-menu-info">
+                <h3>{{ product.name }}</h3>
+                <span>價格: {{ product.price }}</span>
+            </div>
+            <i class="fa-solid fa-chevron-right admin-menu-chevron"></i>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 右側面板容器 -->
+    <div class="admin-panels-container" id="admin-forms-container">
+
+        <!-- ── 新增產品面板 ── -->
+        <div class="panel admin-edit-panel" id="panel-new-product">
+            <h2>
+                <i class="fa-solid fa-plus-circle" style="color: var(--accent-primary);"></i>
+                新增產品
+            </h2>
+            <form action="{{ url_for('create_product') }}" method="POST" enctype="multipart/form-data" id="form-new-product">
+                <!-- 產品名稱 -->
+                <div class="form-group">
+                    <label for="new-name">產品名稱 <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="name" id="new-name" class="form-control" placeholder="例如: SuperPhone X" required>
+                </div>
+                <!-- 價格 -->
+                <div class="form-group">
+                    <label for="new-price">價格 <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="price" id="new-price" class="form-control" placeholder="例如: NT$ 9,999" required>
+                </div>
+                <!-- 簡介 -->
+                <div class="form-group">
+                    <label for="new-summary">產品簡介 <span style="color:#ef4444;">*</span></label>
+                    <textarea name="summary" id="new-summary" class="form-control" rows="3" style="resize: vertical; font-family: inherit;" required placeholder="一句話描述這個產品的核心特色..."></textarea>
+                </div>
+                <!-- 產品圖片上傳 -->
+                <div class="form-group">
+                    <label>產品展示圖片（可選）</label>
+                    <div class="admin-image-upload-wrapper">
+                        <div class="image-preview-box" id="new-preview-box" style="display:none;">
+                            <img id="preview-img-new" alt="展示圖預覽">
+                        </div>
+                        <div class="image-upload-controls">
+                            <input type="file" name="product_image" class="image-upload-input" data-product-id="new" id="image-upload-new" accept="image/*">
+                            <p class="image-upload-hint">支援格式: PNG, JPG, JPEG, WEBP, GIF (建議比例 4:3)</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 詳細規格 -->
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span>規格參數（可新增多列）</span>
+                        <button type="button" class="btn btn-secondary btn-add-spec" data-product-id="new" style="padding: 6px 12px; font-size: 13px;" id="add-spec-btn-new">
+                            <i class="fa-solid fa-plus"></i> 新增規格欄位
+                        </button>
+                    </label>
+                    <div class="specs-edit-group" id="specs-container-new">
+                        <div class="spec-edit-row">
+                            <input type="text" name="spec_keys[]" class="form-control" placeholder="規格名稱 (例如: 重量)">
+                            <input type="text" name="spec_values[]" class="form-control" placeholder="規格內容 (例如: 120g)">
+                            <button type="button" class="btn-remove-spec" title="刪除此規格">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="create-product-btn">
+                    <i class="fa-solid fa-plus"></i> 確認新增產品
+                </button>
+            </form>
+        </div>
+
+        <!-- ── 各產品編輯面板 ── -->
+        {% for product in products %}
+        <div class="panel admin-edit-panel {% if loop.first %}active{% endif %}" id="panel-{{ product.id }}">
+            <h2>
+                <i class="fa-regular fa-pen-to-square" style="color: var(--accent-secondary);"></i>
+                編輯「{{ product.name }}」
+            </h2>
+            
+            <!-- 產品資訊編輯表單 -->
+            <form action="{{ url_for('update_product') }}" method="POST" enctype="multipart/form-data" id="form-{{ product.id }}">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                
+                <!-- 產品名稱 -->
+                <div class="form-group">
+                    <label for="name-{{ product.id }}">產品名稱</label>
+                    <input type="text" name="name" id="name-{{ product.id }}" class="form-control" value="{{ product.name }}" required>
+                </div>
+                
+                <!-- 價格 -->
+                <div class="form-group">
+                    <label for="price-{{ product.id }}">價格</label>
+                    <input type="text" name="price" id="price-{{ product.id }}" class="form-control" value="{{ product.price }}" required>
+                </div>
+                
+                <!-- 簡介 -->
+                <div class="form-group">
+                    <label for="summary-{{ product.id }}">產品簡介</label>
+                    <textarea name="summary" id="summary-{{ product.id }}" class="form-control" rows="3" style="resize: vertical; font-family: inherit;" required>{{ product.summary }}</textarea>
+                </div>
+                
+                <!-- 產品圖片上傳與預覽 -->
+                <div class="form-group">
+                    <label>產品展示圖片</label>
+                    <div class="admin-image-upload-wrapper">
+                        <div class="image-preview-box">
+                            <img src="{{ product.image }}" id="preview-img-{{ product.id }}" alt="展示圖預覽">
+                        </div>
+                        <div class="image-upload-controls">
+                            <input type="file" name="product_image" class="image-upload-input" data-product-id="{{ product.id }}" id="image-upload-{{ product.id }}" accept="image/*">
+                            <p class="image-upload-hint">支援格式: PNG, JPG, JPEG, WEBP, GIF (建議比例 4:3)</p>
+                            <button type="button" class="btn btn-secondary btn-google-drive" data-product-id="{{ product.id }}" data-import-type="image" style="margin-top: 10px; font-size: 13px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; border-color: rgba(255,255,255,0.15);">
+                                <i class="fa-brands fa-google-drive"></i> 從雲端選擇圖片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 詳細規格動態編輯 -->
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span>規格參數設定</span>
+                        <button type="button" class="btn btn-secondary btn-add-spec" data-product-id="{{ product.id }}" style="padding: 6px 12px; font-size: 13px;" id="add-spec-btn-{{ product.id }}">
+                            <i class="fa-solid fa-plus"></i> 新增規格欄位
+                        </button>
+                    </label>
+                    <div class="specs-edit-group" id="specs-container-{{ product.id }}">
+                        {% if product.specs %}
+                            {% for key, val in product.specs.items() %}
+                            <div class="spec-edit-row">
+                                <input type="text" name="spec_keys[]" class="form-control" value="{{ key }}" placeholder="規格名稱" required>
+                                <input type="text" name="spec_values[]" class="form-control" value="{{ val }}" placeholder="規格內容" required>
+                                <button type="button" class="btn-remove-spec" title="刪除此規格" id="remove-spec-{{ product.id }}-{{ loop.index }}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="spec-edit-row">
+                                <input type="text" name="spec_keys[]" class="form-control" placeholder="規格名稱" required>
+                                <input type="text" name="spec_values[]" class="form-control" placeholder="規格內容" required>
+                                <button type="button" class="btn-remove-spec" title="刪除此規格">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 儲存按鈕 -->
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="save-btn-{{ product.id }}">
+                    <i class="fa-solid fa-floppy-disk"></i> 儲存變更
+                </button>
+            </form>
+
+            <!-- ── PDF 上傳區塊（後台專屬） ── -->
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--text-secondary);">
+                    <i class="fa-solid fa-file-arrow-up" style="color: var(--accent-primary); margin-right: 8px;"></i>
+                    上傳 PDF 簡報
+                </h3>
+                <form action="{{ url_for('upload_file', product_id=product.id) }}" method="POST" enctype="multipart/form-data" id="pdf-upload-form-{{ product.id }}">
+                    <!-- 拖曳區 -->
+                    <div class="upload-dropzone" id="upload-dropzone-{{ product.id }}" data-form-id="pdf-upload-form-{{ product.id }}">
+                        <span class="upload-icon"><i class="fa-regular fa-file-pdf"></i></span>
+                        <p>拖曳 PDF 至此，或點擊選取</p>
+                        <span>僅支援 .pdf 格式，上限 10MB</span>
+                        <input type="file" name="pdf_file" id="pdf-file-input-{{ product.id }}" accept=".pdf" class="admin-pdf-file-input" data-product-id="{{ product.id }}">
+                    </div>
+                    <!-- 雲端硬碟選擇簡報 -->
+                    <button type="button" class="btn btn-secondary btn-google-drive" data-product-id="{{ product.id }}" data-import-type="pdf" style="margin-top: 12px; font-size: 13px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center; border-color: rgba(255,255,255,0.15);">
+                        <i class="fa-brands fa-google-drive"></i> 從雲端選擇簡報 (PDF / 簡報)
+                    </button>
+                    <!-- 已選取提示 -->
+                    <div class="file-selected-indicator" id="pdf-indicator-{{ product.id }}" style="display:none;">
+                        <span id="pdf-selected-name-{{ product.id }}"><i class="fa-solid fa-file"></i> filename.pdf</span>
+                        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                    </div>
+                    <!-- 上傳按鈕 -->
+                    <div class="submit-btn-wrapper" id="pdf-submit-wrapper-{{ product.id }}" style="display:none;">
+                        <button type="submit" class="btn btn-primary" id="pdf-submit-btn-{{ product.id }}">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 上傳至雲端
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 此產品的 PDF 清單 -->
+                {% set product_pdfs = pdfs | selectattr('product_id', 'equalto', product.id) | list %}
+                {% if product_pdfs %}
+                <div style="margin-top: 16px;">
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">已上傳的簡報 ({{ product_pdfs | length }} 份)</p>
+                    <div class="pdf-list">
+                        {% for pdf in product_pdfs %}
+                        <div class="pdf-item" id="admin-pdf-item-{{ product.id }}-{{ loop.index }}">
+                            <div class="pdf-info">
+                                <i class="fa-solid fa-file-pdf pdf-file-icon"></i>
+                                <div class="pdf-details">
+                                    <div class="pdf-name" title="{{ pdf.display_name }}">{{ pdf.display_name }}</div>
+                                    <div class="pdf-meta">{{ pdf.upload_time }}</div>
+                                </div>
+                            </div>
+                            <div class="pdf-actions">
+                                <a href="{{ pdf.url }}" class="btn-icon" target="_blank" title="在新分頁預覽" id="admin-view-{{ product.id }}-{{ loop.index }}">
+                                    <i class="fa-regular fa-eye"></i>
+                                </a>
+                                {% if pdf.url.startswith('http') %}
+                                    <a href="{{ pdf.url }}" class="btn-icon" target="_blank" title="下載簡報" id="admin-dl-{{ product.id }}-{{ loop.index }}">
+                                        <i class="fa-solid fa-download"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('download_pdf', filename=pdf.full_name) }}" class="btn-icon" title="下載簡報" id="admin-dl-{{ product.id }}-{{ loop.index }}">
+                                        <i class="fa-solid fa-download"></i>
+                                    </a>
+                                {% endif %}
+                                <button type="button" class="btn-icon" style="background: rgba(239, 68, 68, 0.08);"
+                                        onclick="confirmDeletePdf('{{ pdf.id }}', '{{ pdf.display_name }}')"
+                                        title="刪除此簡報" id="admin-pdf-del-{{ product.id }}-{{ loop.index }}">
+                                    <i class="fa-solid fa-trash" style="color: #ef4444;"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ── 危險區：刪除產品 ── -->
+            <div style="margin-top: 32px; padding: 20px; border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; background: rgba(239,68,68,0.05);">
+                <h3 style="font-size: 15px; color: #ef4444; margin-bottom: 8px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i>危險操作區
+                </h3>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                    刪除後，此產品的所有資料（包含 PDF 紀錄）將永久移除，無法復原。
+                </p>
+                <button type="button" class="btn btn-danger" 
+                        onclick="confirmDelete('{{ product.id }}', '{{ product.name }}')"
+                        id="delete-btn-{{ product.id }}" style="padding: 10px 20px;">
+                    <i class="fa-solid fa-trash"></i> 刪除此產品
+                </button>
+                <!-- 隱藏的刪除表單 -->
+                <form id="delete-form-{{ product.id }}" 
+                      action="{{ url_for('delete_product', product_id=product.id) }}" 
+                      method="POST" style="display:none;">
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- PDF 總覽（全站） -->
+<div class="panel admin-pdf-list-panel" id="admin-pdf-overview" style="margin-top: 32px;">
+    <h2>
+        <i class="fa-regular fa-file-pdf" style="color: #ef4444; margin-right: 8px;"></i>
+        全站上傳 PDF 簡報總覽
+    </h2>
+    {% if pdfs %}
+        <div class="pdf-list" id="admin-pdf-list">
+            {% for pdf in pdfs %}
+            <div class="pdf-item" id="admin-pdf-item-{{ loop.index }}">
+                <div class="pdf-info">
+                    <i class="fa-solid fa-file-pdf pdf-file-icon"></i>
+                    <div class="pdf-details">
+                        <div class="pdf-name" title="{{ pdf.display_name }}">{{ pdf.display_name }}</div>
+                        <div class="pdf-meta">
+                            產品 ID: <strong style="color: var(--accent-primary)">{{ pdf.product_id }}</strong> | 
+                            上傳時間: {{ pdf.upload_time }}
+                        </div>
+                    </div>
+                </div>
+                <div class="pdf-actions">
+                    <a href="{{ pdf.url }}" class="btn-icon" target="_blank" title="在新分頁檢視" id="global-view-{{ loop.index }}">
+                        <i class="fa-regular fa-eye"></i>
+                    </a>
+                    {% if pdf.url.startswith('http') %}
+                        <a href="{{ pdf.url }}" class="btn-icon" target="_blank" title="下載簡報" id="global-dl-{{ loop.index }}">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('download_pdf', filename=pdf.full_name) }}" class="btn-icon" title="下載簡報" id="global-dl-{{ loop.index }}">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                    {% endif %}
+                    <button type="button" class="btn-icon" style="background: rgba(239, 68, 68, 0.08);"
+                            onclick="confirmDeletePdf('{{ pdf.id }}', '{{ pdf.display_name }}')"
+                            title="刪除此簡報" id="global-del-{{ loop.index }}">
+                        <i class="fa-solid fa-trash" style="color: #ef4444;"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-regular fa-file-lines empty-state-icon"></i>
+            <p>全站目前尚無任何上傳的簡報文件。</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- 網站首頁標題與品牌設定面板 -->
+<div class="panel" id="site-settings-panel" style="margin-top: 32px;">
+    <h2>
+        <i class="fa-solid fa-gear" style="color: var(--accent-secondary); margin-right: 8px;"></i>
+        網站名稱與首頁標題設定
+    </h2>
+    <form action="{{ url_for('update_settings') }}" method="POST" id="site-settings-form">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="site-name-input">網站名稱 (Brand Name)</label>
+                <input type="text" name="site_name" id="site-name-input" class="form-control" value="{{ site_name }}" placeholder="請輸入網站品牌名稱" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="site-title-input">首頁主標題</label>
+                <input type="text" name="site_title" id="site-title-input" class="form-control" value="{{ site_title }}" placeholder="請輸入首頁主標題" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="site-subtitle-input">首頁副標題</label>
+                <input type="text" name="site_subtitle" id="site-subtitle-input" class="form-control" value="{{ site_subtitle }}" placeholder="請輸入首頁副標題" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary" style="border-color: var(--accent-secondary); color: var(--text-primary);" id="submit-site-settings-btn">
+            <i class="fa-solid fa-floppy-disk"></i> 儲存設定
+        </button>
+    </form>
+</div>
+
+<!-- 修改密碼面板 -->
+<div class="panel" id="change-password-panel" style="margin-top: 32px; margin-bottom: 80px;">
+    <h2>
+        <i class="fa-solid fa-key" style="color: var(--accent-primary); margin-right: 8px;"></i>
+        修改管理者密碼
+    </h2>
+    <form action="{{ url_for('change_password') }}" method="POST" id="change-password-form">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="old-password">舊密碼</label>
+                <input type="password" name="old_password" id="old-password" class="form-control" placeholder="請輸入當前密碼" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-password">新密碼</label>
+                <input type="password" name="new_password" id="new-password" class="form-control" placeholder="請輸入新密碼" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="confirm-password">確認新密碼</label>
+                <input type="password" name="confirm_password" id="confirm-password" class="form-control" placeholder="請再次輸入新密碼" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary" style="border-color: var(--accent-primary); color: var(--text-primary);" id="submit-change-password-btn">
+            <i class="fa-solid fa-lock-open"></i> 更新管理者密碼
+        </button>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+// 刪除產品二次確認
+function confirmDelete(productId, productName) {
+    if (confirm(`確定要永久刪除產品「${productName}」嗎？\n\n此操作無法復原，所有相關 PDF 紀錄也將一併刪除。`)) {
+        document.getElementById('delete-form-' + productId).submit();
+    }
+}
+
+// 後台 PDF 拖曳上傳（各產品獨立）
+document.addEventListener('DOMContentLoaded', () => {
+    // 為每個 PDF 上傳拖曳區綁定事件
+    document.querySelectorAll('.upload-dropzone[data-form-id]').forEach(dropzone => {
+        const formId = dropzone.getAttribute('data-form-id');
+        const fileInput = dropzone.querySelector('input[type="file"]');
+        if (!fileInput) return;
+
+        const productId = fileInput.getAttribute('data-product-id');
+        const indicator = document.getElementById(`pdf-indicator-${productId}`);
+        const selectedName = document.getElementById(`pdf-selected-name-${productId}`);
+        const submitWrapper = document.getElementById(`pdf-submit-wrapper-${productId}`);
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        ['dragenter', 'dragover'].forEach(ev => {
+            dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(ev => {
+            dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+        });
+        dropzone.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handlePdfSelect(fileInput, indicator, selectedName, submitWrapper);
+            }
+        });
+        fileInput.addEventListener('change', () => {
+            handlePdfSelect(fileInput, indicator, selectedName, submitWrapper);
+        });
+    });
+
+    function handlePdfSelect(input, indicator, nameEl, submitWrapper) {
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('僅支援上傳 PDF 檔案！');
+                input.value = '';
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('檔案大小不能超過 10MB！');
+                input.value = '';
+                return;
+            }
+            const kb = (file.size / 1024).toFixed(1);
+            nameEl.innerHTML = `<i class="fa-solid fa-file"></i> ${file.name} (${kb} KB)`;
+            if (indicator) indicator.style.display = 'flex';
+            if (submitWrapper) submitWrapper.style.display = 'flex';
+        }
+    }
+
+    // Google API Credentials (由 Flask 後端傳入)
+    const GOOGLE_API_KEY = "{{ google_api_key }}";
+    const GOOGLE_CLIENT_ID = "{{ google_client_id }}";
+
+    // 刪除 PDF 二次確認
+    window.confirmDeletePdf = function(pdfId, pdfName) {
+        if (confirm(`確定要永久刪除簡報「${pdfName}」嗎？\n\n此操作無法復原，實體檔案與資料庫紀錄都將一併刪除。`)) {
+            const form = document.getElementById('global-delete-pdf-form');
+            form.action = '/admin/pdf/delete/' + pdfId;
+            form.submit();
+        }
+    };
+
+    // Google Picker & OAuth 整合邏輯
+    let accessToken = null;
+    let pickerApiLoaded = false;
+    let gsiLoaded = false;
+    let currentTargetProductId = null;
+    let currentImportType = null; // 'image' 或 'pdf'
+
+    function loadGapi() {
+        gapi.load('client:picker', () => {
+            pickerApiLoaded = true;
+        });
+    }
+
+    function loadGis() {
+        gsiLoaded = true;
+    }
+
+    // 動態載入 Google SDK
+    const scriptGapi = document.createElement('script');
+    scriptGapi.src = 'https://apis.google.com/js/api.js';
+    scriptGapi.onload = loadGapi;
+    document.body.appendChild(scriptGapi);
+
+    const scriptGis = document.createElement('script');
+    scriptGis.src = 'https://accounts.google.com/gsi/client';
+    scriptGis.onload = loadGis;
+    document.body.appendChild(scriptGis);
+
+    // 監聽雲端選取按鈕點選
+    document.querySelectorAll('.btn-google-drive').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentTargetProductId = btn.getAttribute('data-product-id');
+            currentImportType = btn.getAttribute('data-import-type');
+
+            if (!GOOGLE_API_KEY || !GOOGLE_CLIENT_ID || GOOGLE_API_KEY.includes('YourApiKey') || GOOGLE_CLIENT_ID.includes('your-client-id') || !GOOGLE_API_KEY || !GOOGLE_CLIENT_ID) {
+                alert("【未配置 Google 雲端金鑰】\n\n請在專案根目錄的 .env 檔案中，設定您的 GOOGLE_API_KEY 與 GOOGLE_CLIENT_ID。\n設定完成後重新部署，即可啟用此功能！");
+                return;
+            }
+
+            // 啟動 OAuth 2.0 授權
+            const tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.readonly',
+                callback: (response) => {
+                    if (response.error !== undefined) {
+                        alert(`認證失敗: ${response.error}`);
+                        return;
+                    }
+                    accessToken = response.access_token;
+                    createPicker();
+                },
+            });
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+        });
+    });
+
+    // 創建並開啟 Google Picker
+    function createPicker() {
+        if (!pickerApiLoaded) {
+            alert('Google Picker API 尚未載入完成，請稍後再試！');
+            return;
+        }
+
+        const view = new google.picker.DocsView();
+        
+        if (currentImportType === 'image') {
+            view.setMimeTypes('image/png,image/jpeg,image/jpg,image/webp,image/gif');
+            view.setMode(google.picker.DocsViewMode.GRID);
+        } else if (currentImportType === 'pdf') {
+            view.setMimeTypes('application/pdf,application/vnd.google-apps.presentation');
+        }
+
+        const picker = new google.picker.PickerBuilder()
+            .addView(view)
+            .setOAuthToken(accessToken)
+            .setDeveloperKey(GOOGLE_API_KEY)
+            .setCallback(pickerCallback)
+            .setTitle(currentImportType === 'image' ? '從雲端硬碟選擇產品圖片' : '從雲端硬碟選擇簡報 (PDF / 簡報)')
+            .build();
+
+        picker.setVisible(true);
+    }
+
+    // Picker 回傳事件處理
+    function pickerCallback(data) {
+        if (data.action === google.picker.Action.PICKED) {
+            const doc = data.docs[0];
+            const fileId = doc.id;
+            const fileName = doc.name;
+            const mimeType = doc.mimeType;
+
+            // 顯示 Loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style.position = 'fixed';
+            loadingOverlay.style.inset = '0';
+            loadingOverlay.style.background = 'rgba(11, 15, 25, 0.85)';
+            loadingOverlay.style.zIndex = '9999';
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.style.flexDirection = 'column';
+            loadingOverlay.style.justifyContent = 'center';
+            loadingOverlay.style.alignItems = 'center';
+            loadingOverlay.style.color = '#ffffff';
+            loadingOverlay.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+            loadingOverlay.innerHTML = `
+                <div style="font-size: 28px; margin-bottom: 16px; color: var(--accent-primary);"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                <div style="font-size: 16px; font-weight: 600;">正在從 Google Drive 下載並導入...</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">「${fileName}」</div>
+            `;
+            document.body.appendChild(loadingOverlay);
+
+            fetch('/admin/google-drive/import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: currentTargetProductId,
+                    file_id: fileId,
+                    access_token: accessToken,
+                    file_name: fileName,
+                    mime_type: mimeType,
+                    import_type: currentImportType
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                loadingOverlay.remove();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(`導入失敗: ${result.message}`);
+                }
+            })
+            .catch(err => {
+                loadingOverlay.remove();
+                alert(`連接伺服器錯誤: ${err}`);
+            });
+        }
+    }
+
+    // 新增產品圖片預覽
+    const newImageInput = document.getElementById('image-upload-new');
+    if (newImageInput) {
+        newImageInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const previewBox = document.getElementById('new-preview-box');
+                const previewImg = document.getElementById('preview-img-new');
+                previewImg.src = URL.createObjectURL(file);
+                previewBox.style.display = 'block';
+            }
+        });
+    }
+});
+</script>
+
+<!-- 全域 PDF 刪除隱藏表單 -->
+<form id="global-delete-pdf-form" action="" method="POST" style="display:none;"></form>
+{% endblock %}
+{% endblock %}

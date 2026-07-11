@@ -1,0 +1,904 @@
+/* 導入字體 */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+:root {
+    --bg-primary: #0b0f19;
+    --bg-secondary: #131b2e;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-hover: rgba(255, 255, 255, 0.2);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --accent-primary: #6366f1; /* Indigo */
+    --accent-secondary: #a855f7; /* Purple */
+    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --error-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    
+    --glow-shadow: 0 0 25px rgba(99, 102, 241, 0.2);
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+}
+
+/* 全域重設與基本樣式 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* 背景光暈裝飾 */
+body::before, body::after {
+    content: '';
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.15;
+}
+
+body::before {
+    background: var(--accent-primary);
+    top: 10%;
+    left: -100px;
+}
+
+body::after {
+    background: var(--accent-secondary);
+    bottom: 10%;
+    right: -100px;
+}
+
+/* 網格系統與容器 */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* 導覽列 */
+header {
+    background-color: rgba(11, 15, 25, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo span {
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    -webkit-text-fill-color: var(--accent-primary);
+    margin-left: 8px;
+}
+
+/* 訊息提示 */
+.flash-messages {
+    position: fixed;
+    top: 90px;
+    right: 24px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flash-message {
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    animation: slideIn 0.3s var(--transition);
+}
+
+.flash-message.success {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.flash-message.error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+/* 首頁 Banner */
+.hero {
+    text-align: center;
+    padding: 80px 0 60px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    color: var(--text-secondary);
+    font-size: 18px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 產品卡片網格 */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    margin-bottom: 80px;
+}
+
+.product-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    backdrop-filter: blur(16px);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--glass-border-hover);
+    box-shadow: var(--glow-shadow), var(--card-shadow);
+}
+
+.product-image-wrapper {
+    width: 100%;
+    height: 280px; /* 提高高度以適配直式產品包裝 */
+    overflow: hidden;
+    position: relative;
+    background-color: #ffffff; /* 使用純白底色，使去背產品圖完美融入 */
+    padding: 16px; /* 加上內邊距防止圖片邊緣與卡片框貼合 */
+    box-sizing: border-box;
+}
+
+.product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 改為 contain 確保整張商品照片完整展示不被裁切 */
+    transition: var(--transition);
+}
+
+.product-card:hover img {
+    transform: scale(1.03); /* 輕微縮放，保持精緻質感 */
+}
+
+.product-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.product-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.product-price {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    background: rgba(168, 85, 247, 0.1);
+    padding: 4px 12px;
+    border-radius: 8px;
+}
+
+.product-summary {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    flex-grow: 1;
+}
+
+.btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn-primary {
+    background: var(--accent-gradient);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    box-shadow: var(--glow-shadow);
+}
+
+.btn-secondary {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--glass-border-hover);
+}
+
+.btn-danger {
+    background: var(--error-gradient);
+    color: white;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+/* 詳細頁設計 */
+.detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 48px;
+    padding: 48px 0;
+}
+
+@media (max-width: 900px) {
+    .detail-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.detail-left {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.detail-img-container {
+    width: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--card-shadow);
+}
+
+.detail-img-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.detail-info {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 32px;
+    backdrop-filter: blur(16px);
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.detail-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-secondary);
+}
+
+.detail-desc {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 32px;
+}
+
+/* 規格表格 */
+.spec-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.spec-table tr {
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.spec-table tr:last-child {
+    border-bottom: none;
+}
+
+.spec-table td {
+    padding: 14px 0;
+    font-size: 15px;
+}
+
+.spec-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 35%;
+}
+
+.spec-val {
+    color: var(--text-secondary);
+}
+
+/* 上傳與下載管理區 (右側) */
+.detail-right {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 32px;
+    backdrop-filter: blur(16px);
+}
+
+.panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 拖曳上傳區 */
+.upload-dropzone {
+    border: 2px dashed var(--glass-border);
+    border-radius: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: rgba(255,255,255,0.01);
+}
+
+.upload-dropzone:hover, .upload-dropzone.dragover {
+    border-color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.upload-icon {
+    font-size: 36px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.upload-dropzone p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.upload-dropzone span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+#file-input {
+    display: none;
+}
+
+.file-selected-indicator {
+    display: none;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    text-align: left;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.submit-btn-wrapper {
+    margin-top: 16px;
+    display: none;
+    justify-content: flex-end;
+}
+
+/* PDF 下載/檢視 列表 */
+.pdf-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pdf-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    padding: 16px 20px;
+    border-radius: 14px;
+    transition: var(--transition);
+}
+
+.pdf-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--glass-border-hover);
+}
+
+.pdf-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0; /* 讓 text-overflow 生效 */
+}
+
+.pdf-file-icon {
+    font-size: 28px;
+    color: #ef4444; /* 紅色代表 PDF */
+    flex-shrink: 0;
+}
+
+.pdf-details {
+    min-width: 0;
+}
+
+.pdf-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 15px;
+}
+
+.pdf-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.pdf-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-icon:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--glass-border-hover);
+    color: var(--accent-primary);
+}
+
+.btn-icon.view:hover {
+    color: var(--accent-secondary);
+}
+
+/* PDF 內嵌檢視器 */
+.pdf-viewer-wrapper {
+    margin-top: 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    display: none;
+    flex-direction: column;
+}
+
+.pdf-viewer-header {
+    background: var(--bg-secondary);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.pdf-viewer-title {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
+}
+
+.close-viewer-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.close-viewer-btn:hover {
+    color: var(--text-primary);
+}
+
+.pdf-iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+    background: white;
+}
+
+/* 頁尾 */
+footer {
+    margin-top: auto;
+    border-top: 1px solid var(--glass-border);
+    padding: 40px 0;
+    background: rgba(11, 15, 25, 0.9);
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+.footer-copy {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.footer-version {
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+}
+
+/* ==========================================================================
+   v1.1.0 新增樣式: 登入頁與管理者後台
+   ========================================================================== */
+
+/* 登入頁樣式 */
+.login-container {
+    max-width: 420px;
+    margin: 80px auto;
+    padding: 40px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    animation: slideIn 0.4s var(--transition);
+}
+
+.login-container h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.login-container p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 15px;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+}
+
+/* 後台版面配置 */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 32px;
+    align-items: start;
+    margin-bottom: 80px;
+}
+
+@media (max-width: 950px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-menu-item {
+    padding: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.admin-menu-item:hover, .admin-menu-item.active {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: var(--accent-primary);
+    box-shadow: var(--glow-shadow);
+}
+
+.admin-menu-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-menu-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-menu-info span {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.admin-menu-chevron {
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.admin-menu-item:hover .admin-menu-chevron, .admin-menu-item.active .admin-menu-chevron {
+    color: var(--accent-primary);
+    transform: translateX(4px);
+}
+
+/* 後台編輯面板 */
+.admin-edit-panel {
+    display: none;
+    animation: fadeIn 0.3s var(--transition);
+}
+
+.admin-edit-panel.active {
+    display: block;
+}
+
+/* 規格編輯列 */
+.specs-edit-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+}
+
+.spec-edit-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.spec-edit-row .form-control {
+    flex: 1;
+}
+
+.btn-remove-spec {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-remove-spec:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* 後台圖片上傳與預覽 */
+.admin-image-upload-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 500px) {
+    .admin-image-upload-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.image-preview-box {
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.image-preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-upload-controls {
+    flex-grow: 1;
+}
+
+.image-upload-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+/* 後台文件清單樣式修正 */
+.admin-pdf-list-panel {
+    margin-top: 32px;
+    margin-bottom: 80px;
+}
+
+/* 動畫定義 */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

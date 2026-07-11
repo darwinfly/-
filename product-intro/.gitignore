@@ -1,0 +1,21 @@
+# 敏感憑證
+.env
+
+# 資料庫與暫存檔案
+product_intro.db
+*.db
+*.sqlite
+__pycache__/
+*.pyc
+
+# 上傳的靜態檔案與預覽圖片
+static/uploads/*
+static/images/*
+!static/images/earbuds.png
+
+# 系統與編輯器暫存
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.pytest_cache/

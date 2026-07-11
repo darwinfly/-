@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} | 產品簡介說明{% endblock %}
+{% block meta_description %}TechShowcase 產品詳細規格：{{ product.name }}，定價為 {{ product.price }}。內有完整硬體規格說明，並提供線上預覽產品簡報。{% endblock %}
+
+{% block extra_head %}
+<style>
+/* 防止 PDF 被右鍵複製的保護層 */
+.pdf-protect-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: transparent;
+    cursor: default;
+    pointer-events: none; /* 允許滾動事件穿透到 iframe 以利上下滾動內容 */
+}
+.pdf-viewer-wrapper {
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.pdf-viewer-header {
+    position: relative;
+    z-index: 12; /* 確保頂部工具列高於保護層，關閉按鈕可正常接收點擊 */
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-layout" id="product-detail-page">
+    
+    <!-- 左側：產品主圖與規格 -->
+    <div class="detail-left">
+        <div class="detail-img-container" id="detail-image-box">
+            <img src="{{ product.image }}" alt="{{ product.name }} 產品照片" draggable="false">
+        </div>
+        
+        <!-- 產品資訊與規格表格 -->
+        <div class="detail-info" id="detail-specs-box">
+            <div class="detail-header">
+                <h1 id="detail-product-name">{{ product.name }}</h1>
+                <span class="detail-price" id="detail-product-price">{{ product.price }}</span>
+            </div>
+            
+            <p class="detail-desc" id="detail-product-summary">
+                {{ product.summary }}
+            </p>
+            
+            <h3 style="margin-bottom: 16px; font-weight: 700; color: var(--text-primary);">
+                <i class="fa-solid fa-list-check" style="color: var(--accent-primary); margin-right: 8px;"></i> 詳細規格
+            </h3>
+            
+            <table class="spec-table" id="specs-table-el">
+                <tbody>
+                    {% for key, val in product.specs.items() %}
+                    <tr>
+                        <td class="spec-label">{{ key }}</td>
+                        <td class="spec-val">{{ val }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 右側：產品簡報線上瀏覽區（純檢視，無下載） -->
+    <div class="detail-right">
+        <div class="panel" id="documents-panel">
+            <h2>
+                <i class="fa-regular fa-folder-open" style="color: var(--accent-secondary);"></i>
+                產品簡報文件
+            </h2>
+            
+            {% if pdfs %}
+                <div class="pdf-list" id="pdf-items-list">
+                    {% for pdf in pdfs %}
+                    <div class="pdf-item" id="pdf-item-{{ loop.index }}">
+                        <div class="pdf-info">
+                            <i class="fa-solid fa-file-pdf pdf-file-icon"></i>
+                            <div class="pdf-details">
+                                <div class="pdf-name" title="{{ pdf.display_name }}">{{ pdf.display_name }}</div>
+                                <div class="pdf-meta">上傳時間: {{ pdf.upload_time }}</div>
+                            </div>
+                        </div>
+                        <div class="pdf-actions">
+                            <!-- 僅提供在線預覽，不提供下載按鈕 -->
+                            <button class="btn-icon view" 
+                                    data-url="{{ pdf.url }}" 
+                                    data-name="{{ pdf.display_name }}"
+                                    title="在線預覽簡報"
+                                    id="view-btn-{{ loop.index }}">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state" id="pdf-empty-state">
+                    <i class="fa-regular fa-file-lines empty-state-icon"></i>
+                    <p>目前尚無產品簡報文件。</p>
+                </div>
+            {% endif %}
+            
+            <!-- 內嵌 PDF 檢視器區塊（加入防護覆蓋層） -->
+            <div class="pdf-viewer-wrapper" id="pdf-viewer-wrapper">
+                <div class="pdf-viewer-header">
+                    <span class="pdf-viewer-title" id="viewer-title">預覽簡報: 檔案名稱.pdf</span>
+                    <button class="close-viewer-btn" id="close-viewer-btn" title="關閉預覽">
+                        <i class="fa-solid fa-xmark"></i> 關閉預覽
+                    </button>
+                </div>
+                <!-- 防複製保護層：覆蓋在 iframe 之上，阻止右鍵與直接操作 -->
+                <div class="pdf-protect-overlay" id="pdf-protect-overlay" 
+                     oncontextmenu="return false;"
+                     title="此文件僅供線上預覽，不提供下載"></div>
+                <iframe src="about:blank" 
+                        class="pdf-iframe" 
+                        id="pdf-iframe"
+                        referrerpolicy="no-referrer"></iframe>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// 全站禁用右鍵選單（防止另存新檔）
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('#pdf-viewer-wrapper') || e.target.closest('#documents-panel')) {
+        e.preventDefault();
+        return false;
+    }
+});
+// 禁止鍵盤快捷鍵下載（Ctrl+S, Ctrl+P）
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p')) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

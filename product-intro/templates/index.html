@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}首頁 | 產品簡介說明{% endblock %}
+{% block meta_description %}TechShowcase 產品展示首頁。精選我們最前沿的硬體設備，包括主動降噪耳機、便攜智慧投影機、以及智慧健康手錶。點擊了解更多產品規格與下載簡報。{% endblock %}
+
+{% block content %}
+<!-- Banner 介紹 -->
+<section class="hero" id="homepage-hero">
+    <h1>{{ site_title }}</h1>
+    <p>{{ site_subtitle }}</p>
+</section>
+
+<!-- 產品列表區 -->
+<section class="products-grid" id="product-cards-container">
+    {% for product in products %}
+    <article class="product-card" id="card-{{ product.id }}">
+        <!-- 產品圖片 -->
+        <div class="product-image-wrapper">
+            <img src="{{ product.image }}" alt="{{ product.name }} 產品照片">
+        </div>
+        
+        <!-- 產品內容 -->
+        <div class="product-content">
+            <div class="product-card-header">
+                <h2 class="product-title">{{ product.name }}</h2>
+                <span class="product-price">{{ product.price }}</span>
+            </div>
+            
+            <p class="product-summary">
+                {{ product.summary }}
+            </p>
+            
+            <!-- 操作按鈕 -->
+            <a href="{{ url_for('detail', product_id=product.id) }}" class="btn btn-primary" id="btn-view-{{ product.id }}">
+                <i class="fa-solid fa-arrow-right"></i> 查看規格與簡報
+            </a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

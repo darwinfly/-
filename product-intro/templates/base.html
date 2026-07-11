@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}精選公司產品展示網站，提供詳細規格與簡報下載。{% endblock %}">
+    <title>{% block title %}產品簡介說明{% endblock %}</title>
+    <!-- 引入 Vanilla CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 引入 FontAwesome 圖標 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- 導覽列 -->
+    <header>
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo" id="nav-logo">
+                <i class="fa-solid fa-cube"></i> {{ site_name }} <span>{{ current_version }}</span>
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary" id="nav-home-btn">
+                <i class="fa-solid fa-house"></i> 回首頁
+            </a>
+        </div>
+    </header>
+
+    <!-- Flash 訊息容器 -->
+    <div class="flash-messages" id="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}" id="flash-{{ loop.index }}">
+                        {% if category == 'success' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- 主要內容區 -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 頁尾 -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-copy" id="footer-copyright">
+                &copy; 2026 {{ site_name }}. 版權所有。
+            </div>
+            <div class="footer-version" id="footer-version-tag">
+                目前版本: <span>{{ current_version }}</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 引入 JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}管理者登入 | 產品簡介說明{% endblock %}
+{% block meta_description %}TechShowcase 管理者密碼登入頁。請輸入正確的管理者密碼以安全存取產品展示管理後台。{% endblock %}
+
+{% block content %}
+<div class="login-container" id="login-card">
+    <h1>管理者登入</h1>
+    <p>請輸入密碼以存取後台管理系統</p>
+    
+    <form action="{{ url_for('login') }}" method="POST" id="login-form">
+        <!-- 密碼輸入框 -->
+        <div class="form-group">
+            <label for="password-input">後台安全密碼</label>
+            <input type="password" name="password" id="password-input" class="form-control" placeholder="請輸入管理者密碼" required autofocus>
+        </div>
+        
+        <!-- 送出按鈕 -->
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="login-submit-btn">
+            <i class="fa-solid fa-lock-open"></i> 安全登入
+        </button>
+    </form>
+    
+    <div style="margin-top: 24px;">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary" style="width: 100%;" id="login-back-btn">
+            <i class="fa-solid fa-arrow-left"></i> 返回產品首頁
+        </a>
+    </div>
+</div>
+{% endblock %}
